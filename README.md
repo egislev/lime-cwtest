@@ -1,1 +1,1 @@
-Lime CW test utility
+Lime CW test utility, generates continuous waveform at specified frequency (hard coded)
