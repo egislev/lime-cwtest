@@ -69,8 +69,6 @@ void	lime_init ()
 	rx_stream.isTx = false;
 	rx_stream.dataFmt = lms_stream_t::LMS_FMT_F32;
 	LMS_SetupStream(device, &rx_stream);
-
-
 }
 // --------------------------------------------------------------------------------------------------------------------------
 DWORD WINAPI	tx_thread(LPVOID lpParam)
@@ -84,19 +82,10 @@ DWORD WINAPI	tx_thread(LPVOID lpParam)
 	}
 	const int send_cnt = int(BUFFER_SIZE * f_ratio) / f_ratio;
 	LMS_StartStream(&tx_stream);
-	auto t1 = chrono::high_resolution_clock::now();
 	while (1) {
 		int ret = LMS_SendStream(&tx_stream, tx_buffer, send_cnt, nullptr, 1000);
 		if (ret != send_cnt)
 			cout << "error: samples sent: " << ret << "/" << send_cnt << endl;
-		if (chrono::high_resolution_clock::now() - t1 > chrono::seconds(1))
-		{
-			t1 = chrono::high_resolution_clock::now();
-			lms_stream_status_t status;
-			LMS_GetStreamStatus(&tx_stream, &status);
-			cout << "TX data rate: " << status.linkRate / 1e6 << " MB/s\n";
-			cout << "TX fifo: " << 100 * status.fifoFilledCount / status.fifoSize << "%" << endl;
-		}
 	}
 	return (0);
 }
@@ -106,49 +95,42 @@ DWORD WINAPI	rx_thread(LPVOID lpParam)
 	const int bufersize = 10000;
 	float buffer[bufersize * 2];
 	LMS_StartStream(&rx_stream);
-	auto t1 = chrono::high_resolution_clock::now();
+
 	while (1) {
 		int samplesRead = LMS_RecvStream(&rx_stream, buffer, bufersize, NULL, 1000);
+	}
+	return (0);
+}
+// --------------------------------------------------------------------------------------------------------------------------
+DWORD WINAPI	status_thread(LPVOID lpParam)
+{
+	auto t1 = chrono::high_resolution_clock::now();
+	while (1) {
 		if (chrono::high_resolution_clock::now() - t1 > chrono::seconds(1))
 		{
 			t1 = chrono::high_resolution_clock::now();
 			lms_stream_status_t status;
 			LMS_GetStreamStatus(&rx_stream, &status);
-			cout << "RX data rate: " << status.linkRate / 1e6 << " MB/s\n";
-			cout << "RX fifo: " << 100 * status.fifoFilledCount / status.fifoSize << "%" << endl;
+			cout << "RX rate: " << status.linkRate / 1e6 << " MB/s " << "RX fifo: " << 100 * status.fifoFilledCount / status.fifoSize << "% ";
+			LMS_GetStreamStatus(&tx_stream, &status);
+			cout << "TX rate: " << status.linkRate / 1e6 << " MB/s " << "TX fifo: " << 100 * status.fifoFilledCount / status.fifoSize << "%                  \r";
 		}
-
-
 	}
 	return (0);
 }
 // --------------------------------------------------------------------------------------------------------------------------
-void	print_stats()
-{
-
-
-
-
-}
-// --------------------------------------------------------------------------------------------------------------------------
 int main ()
 {
-	HANDLE	txt, rxt;
-	DWORD	txtid, rxtid;
+	HANDLE	txt, rxt,st;
+	DWORD	txtid, rxtid,stid;
 
 	cout << "Lime CW test utility" << endl;
 
 	lime_init();
 	txt = CreateThread(NULL, 0, tx_thread, NULL, 0, &txtid);
 	rxt = CreateThread(NULL, 0, rx_thread, NULL, 0, &rxtid);
+	st = CreateThread(NULL, 0, status_thread, NULL, 0, &stid);
 	cout << "Test is running ... Press Ctrl-C to stop." << endl;
-	while (1) {
-
-
-
-
-
-
-	}
+	while (1) {}
 	return (0);
 }
