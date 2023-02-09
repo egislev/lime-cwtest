@@ -12,7 +12,7 @@ using namespace std;
 lms_device_t	*device = NULL;
 lms_stream_t	tx_stream,rx_stream;
 float			tx_buffer[2 * BUFFER_SIZE];
-const double	frequency = 145.5e6;
+//const double	frequency = 145.5e6;
 const double	sample_rate = 4e6;
 const double	tone_freq = 1000;
 const double	f_ratio = tone_freq / sample_rate;
@@ -21,6 +21,8 @@ int error()
 {
 	if (device != NULL)
 		LMS_Close(device);
+	cout << "\nProgramm terminating, press any key to close window ...";
+	getch();
 	exit(-1);
 }
 // --------------------------------------------------------------------------------------------------------------------------
@@ -46,9 +48,9 @@ void	lime_init ()
 		error();
 	if (LMS_EnableChannel(device, LMS_CH_RX, 0, true) != 0)
 		error();
-	if (LMS_SetLOFrequency(device, LMS_CH_TX, 0, 145.5e6) != 0)
+	if (LMS_SetLOFrequency(device, LMS_CH_TX, 0, 2450e6) != 0)
 		error();
-	if (LMS_SetLOFrequency(device, LMS_CH_RX, 0, 145.5e6) != 0)
+	if (LMS_SetLOFrequency(device, LMS_CH_RX, 0, 2449e6) != 0)
 		error();
 	if (LMS_SetSampleRate(device, 8e6, 2) != 0)
 		error();
